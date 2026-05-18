@@ -10,21 +10,21 @@ async function main() {
     {
       firstName: "Super",
       lastName: "Admin",
-      email: "admin@recruitment.rw",
+      email: "admin@recruitment.com",
       password: await bcrypt.hash("Admin@1234", saltRounds),
       role: "SUPER_ADMIN",
     },
     {
       firstName: "HR",
       lastName: "Manager",
-      email: "hr@recruitment.rw",
+      email: "hr@recruitment.com",
       password: await bcrypt.hash("Hr@1234", saltRounds),
       role: "HR",
     },
     {
-      firstName: "John",
-      lastName: "Doe",
-      email: "applicant@recruitment.rw",
+      firstName: "Naomi",
+      lastName: "Teta",
+      email: "NaomiTeta@recruitment.com",
       password: await bcrypt.hash("Applicant@1234", saltRounds),
       role: "APPLICANT",
     },
@@ -45,9 +45,9 @@ async function main() {
 
   console.log("\n Default Credentials:");
   console.log("─────────────────────────────────────────────────────");
-  console.log("SUPER ADMIN → admin@recruitment.rw      | Admin@1234");
-  console.log("HR MANAGER  → hr@recruitment.rw         | Hr@1234");
-  console.log("APPLICANT   → applicant@recruitment.rw  | Applicant@1234");
+  console.log("SUPER ADMIN → admin@recruitment.com      | Admin@1234");
+  console.log("HR MANAGER  → hr@recruitment.com         | Hr@1234");
+  console.log("APPLICANT   → NaomiTeta@recruitment.com  | Applicant@1234");
   console.log("─────────────────────────────────────────────────────");
 }
 
