@@ -9,7 +9,7 @@ const {
   getApplicationById,
   reviewApplication,
 } = require('../controllers/applicationController');
-const { authenticate, authorize } = require('../controllers/auth');
+const { authenticate, authorize } = require('../middleware/auth');
 const upload = require('../middleware/upload');
 
 // All routes require login

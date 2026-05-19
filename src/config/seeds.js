@@ -24,7 +24,7 @@ async function main() {
     {
       firstName: "Naomi",
       lastName: "Teta",
-      email: "NaomiTeta@recruitment.com",
+      email: "tetaNaomi@recruitment.com",
       password: await bcrypt.hash("Applicant@1234", saltRounds),
       role: "APPLICANT",
     },

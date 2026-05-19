@@ -85,8 +85,6 @@ const verifyNESA = async (req, res) => {
 const submitApplication = async (req, res) => {
   try {
     const userId = req.user.id;
-
-    // Check if applicant already submitted an application
     const existing = await prisma.application.findFirst({
       where: { userId },
     });
@@ -121,8 +119,6 @@ const submitApplication = async (req, res) => {
       chemistryGrade,
       biologyGrade,
     } = req.body;
-
-    // CV file info from multer
     const cvFile = req.file;
 
     const application = await prisma.application.create({

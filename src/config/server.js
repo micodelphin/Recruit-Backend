@@ -5,6 +5,8 @@ const path = require("path")
 
 const authRoutes = require("../routes/authRoutes");
 const applicationRoutes = require("../routes/applicationRoutes")
+const userRoutes = require("../routes/userRoutes")
+const dashboardRoutes = require("../routes/dashboardRoutes")
 
 const app = express();
 const PORT = process.env.PORT || 8000;
@@ -17,6 +19,8 @@ app.use("/uploads", express.static(path.join(__dirname, "uploads")));
 
 app.use("/api/auth", authRoutes);
 app.use("/api/applications", applicationRoutes)
+app.use("/api/users", userRoutes)
+app.use("/api/dashboard",dashboardRoutes)
 
 app.get("/api/health", (req, res) => {
   res.json({ success: true, message: "Server is running" });
