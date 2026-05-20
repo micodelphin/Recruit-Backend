@@ -1,6 +1,7 @@
 const prisma = require('../config/db');
 const { fetchNIDAProfile } = require('../utils/nidaService');
 const { fetchNESARecords } = require('../utils/nesaService');
+const { logAudit } = require('../utils/auditLogger');
 
 /**
  * POST /api/applications/verify-nida
@@ -148,6 +149,15 @@ const submitApplication = async (req, res) => {
         status: 'PENDING',
       },
     });
+
+    // After application is created
+await logAudit({
+  userId: req.user.id,
+  action: 'APPLICATION_SUBMITTED',
+  entityType: 'APPLICATION',
+  entityId: application.id,
+  ipAddress: req.ip,
+});
 
     return res.status(201).json({
       success: true,
@@ -345,6 +355,15 @@ const reviewApplication = async (req, res) => {
         reviewedAt: new Date(),
       },
     });
+
+await logAudit({
+  userId: req.user.id,
+  action: `APPLICATION_${status}`,
+  entityType: 'APPLICATION',
+  entityId: id,
+  details: { status, reviewComment },
+  ipAddress: req.ip,
+});
 
     return res.status(200).json({
       success: true,

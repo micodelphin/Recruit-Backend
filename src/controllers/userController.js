@@ -1,5 +1,6 @@
 const prisma = require('../config/db');
 const bcrypt = require('bcryptjs');
+const { logAudit } = require('../utils/auditLogger');
 
 /**
  * GET /api/users
@@ -133,6 +134,14 @@ const createUser = async (req, res) => {
       },
     });
 
+    await logAudit({
+      userId: req.user.id,
+      action: 'USER_CREATED',
+      entityType: 'USER',
+      entityId: newUser.id,
+      ipAddress: req.ip,
+    });
+
     return res.status(201).json({
       success: true,
       message: 'User created successfully.',
@@ -191,6 +200,14 @@ const updateUser = async (req, res) => {
       },
     });
 
+        await logAudit({
+        userId: req.user.id,
+        action: 'USER_UPDATED',
+        entityType: 'USER',
+        entityId: id,
+        ipAddress: req.ip,
+      });
+
     return res.status(200).json({
       success: true,
       message: 'User updated successfully.',
@@ -243,6 +260,15 @@ const toggleUserStatus = async (req, res) => {
       },
     });
 
+  
+  await logAudit({
+  userId: req.user.id,
+  action: updated.isActive ? 'USER_ACTIVATED' : 'USER_DEACTIVATED',
+  entityType: 'USER',
+  entityId: id,
+  ipAddress: req.ip,
+});
+
     return res.status(200).json({
       success: true,
       message: `User ${updated.isActive ? 'activated' : 'deactivated'} successfully.`,
@@ -281,6 +307,14 @@ const deleteUser = async (req, res) => {
     await prisma.user.delete({
       where: { id },
     });
+
+await logAudit({
+  userId: req.user.id,
+  action: 'USER_DELETED',
+  entityType: 'USER',
+  entityId: id,
+  ipAddress: req.ip,
+});
 
     return res.status(200).json({
       success: true,

@@ -95,3 +95,40 @@ model AuditLog {
 
   @@map("audit_logs")
 }
+
+model NidaProfile {
+  id           String   @id @default(uuid())
+  nationalId   String   @unique @map("national_id")
+  fullName     String   @map("full_name")
+  gender       String
+  dob          DateTime
+  placeOfBirth String   @map("place_of_birth")
+  nationality  String
+  fatherName   String   @map("father_name")
+  motherName   String   @map("mother_name")
+  address      String
+  province     String
+  district     String
+  createdAt    DateTime @default(now()) @map("created_at")
+  updatedAt    DateTime @updatedAt @map("updated_at")
+
+  nesaRecord NesaRecord?
+
+  @@map("nida_profiles")
+}
+
+model NesaRecord {
+  id            String   @id @default(uuid())
+  studentId     String   @unique @map("student_id")
+  nationalId    String   @unique @map("national_id")
+  fullName      String   @map("full_name")
+  school        String
+  option        String
+  yearCompleted Int      @map("year_completed")
+  grades        Json
+  createdAt     DateTime @default(now()) @map("created_at")
+  updatedAt     DateTime @updatedAt @map("updated_at")
+  nidaProfile NidaProfile @relation(fields: [nationalId], references: [nationalId])
+
+  @@map("nesa_records")
+}

@@ -1,6 +1,7 @@
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
 const prisma = require("../config/db");
+const { logAudit } = require('../utils/auditLogger');
 
 const login = async (req, res) => {
   try {
@@ -35,6 +36,14 @@ const login = async (req, res) => {
       process.env.JWT_SECRET,
       { expiresIn: process.env.JWT_EXPIRES_IN || "7d" },
     );
+
+    await logAudit({
+    userId: user.id,
+    action: 'LOGIN',
+    entityType: 'USER',
+    entityId: user.id,
+     ipAddress: req.ip,
+    });
 
     return res.status(200).json({
       success: true,
@@ -85,6 +94,14 @@ const register = async (req, res) => {
         role: "APPLICANT",
       },
     });
+
+await logAudit({
+  userId: newUser.id,
+  action: 'REGISTER',
+  entityType: 'USER',
+  entityId: newUser.id,
+  ipAddress: req.ip,
+});
 
     const token = jwt.sign(
       { id: newUser.id, email: newUser.email, role: newUser.role },
