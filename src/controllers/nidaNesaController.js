@@ -97,6 +97,7 @@ const createNIDAProfile = async (req, res) => {
       address,
       province,
       district,
+      phone,
     } = req.body;
 
     // Check if nationalId already exists
@@ -124,6 +125,7 @@ const createNIDAProfile = async (req, res) => {
         address,
         province,
         district,
+        phone: phone || null, 
       },
     });
 

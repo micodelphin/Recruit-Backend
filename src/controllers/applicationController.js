@@ -1,83 +1,7 @@
 const prisma = require('../config/db');
-const { fetchNIDAProfile } = require('../utils/nidaService');
-const { fetchNESARecords } = require('../utils/nesaService');
 const { logAudit } = require('../utils/auditLogger');
 
-/**
- * POST /api/applications/verify-nida
- * Applicant verifies their national ID and gets personal info from NIDA
- */
-const verifyNIDA = async (req, res) => {
-  try {
-    const { nationalId } = req.body;
 
-    if (!nationalId) {
-      return res.status(400).json({
-        success: false,
-        message: 'National ID is required.',
-      });
-    }
-
-    const result = await fetchNIDAProfile(nationalId);
-
-    if (!result.success) {
-      return res.status(400).json({
-        success: false,
-        message: result.message,
-      });
-    }
-
-    return res.status(200).json({
-      success: true,
-      message: 'Profile fetched successfully from NIDA.',
-      data: result.data,
-    });
-  } catch (error) {
-    console.error('NIDA verification error:', error);
-    return res.status(500).json({
-      success: false,
-      message: 'Error verifying National ID.',
-    });
-  }
-};
-
-/**
- * POST /api/applications/verify-nesa
- * Applicant verifies their national ID and gets education records from NESA
- */
-const verifyNESA = async (req, res) => {
-  try {
-    const { nationalId } = req.body;
-
-    if (!nationalId) {
-      return res.status(400).json({
-        success: false,
-        message: 'National ID is required.',
-      });
-    }
-
-    const result = await fetchNESARecords(nationalId);
-
-    if (!result.success) {
-      return res.status(400).json({
-        success: false,
-        message: result.message,
-      });
-    }
-
-    return res.status(200).json({
-      success: true,
-      message: 'Education records fetched successfully from NESA.',
-      data: result.data,
-    });
-  } catch (error) {
-    console.error('NESA verification error:', error);
-    return res.status(500).json({
-      success: false,
-      message: 'Error fetching education records.',
-    });
-  }
-};
 
 /**
  * POST /api/applications
@@ -385,8 +309,6 @@ await logAudit({
 };
 
 module.exports = {
-  verifyNIDA,
-  verifyNESA,
   submitApplication,
   getMyApplication,
   getAllApplications,

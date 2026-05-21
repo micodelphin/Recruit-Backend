@@ -1,8 +1,6 @@
 const express = require('express');
 const router = express.Router();
 const {
-  verifyNIDA,
-  verifyNESA,
   submitApplication,
   getMyApplication,
   getAllApplications,
@@ -16,7 +14,7 @@ const upload = require('../middleware/upload');
 router.use(authenticate);
 
 // Applicant views their own application and status
-router.get('/myApplication', authorize('APPLICANT'), getMyApplication);
+router.get('/my-application', authorize('APPLICANT'), getMyApplication);
 
 // Applicant submits application with CV upload
 router.post('/', authorize('APPLICANT'), upload.single('cv'), submitApplication);
@@ -29,6 +27,8 @@ router.get('/:id', authorize('HR', 'SUPER_ADMIN'), getApplicationById);
 
 // HR approves or rejects an application
 router.patch('/:id/review', authorize('HR', 'SUPER_ADMIN'), reviewApplication);
+
+// router.get('/:id/cv', authorize('HR', 'SUPER_ADMIN'), downloadCV);
 
 module.exports = router;
 

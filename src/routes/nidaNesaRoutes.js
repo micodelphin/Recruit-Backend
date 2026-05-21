@@ -113,6 +113,8 @@ router.get('/nesa/:studentId', authorize('APPLICANT'), getNESARecord);
  *                 type: string
  *               district:
  *                 type: string
+  *               phone:
+ *                 type: string
  *     responses:
  *       201:
  *         description: NIDA profile created successfully
