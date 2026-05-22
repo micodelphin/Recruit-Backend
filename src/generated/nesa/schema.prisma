@@ -1,0 +1,30 @@
+generator client {
+  provider = "prisma-client-js"
+  output   = "../../generated/nesa"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("NESA_DATABASE_URL")
+}
+
+enum NesaResult {
+  PASS
+  FAIL
+}
+
+model NesaRecord {
+  id            String     @id @default(uuid())
+  studentId     String     @unique @map("student_id")
+  nationalId    String     @unique @map("national_id")
+  fullName      String     @map("full_name")
+  school        String
+  option        String
+  yearCompleted Int        @map("year_completed")
+  grades        Json
+  result        NesaResult @default(PASS)
+  createdAt     DateTime   @default(now()) @map("created_at")
+  updatedAt     DateTime   @updatedAt @map("updated_at")
+
+  @@map("nesa_records")
+}

@@ -72,6 +72,7 @@ const register = async (req, res) => {
   try {
     const { firstName, lastName, email, password } = req.body;
 
+    // Check if email exists in recruitment db
     const existing = await prisma.user.findUnique({
       where: { email: email.toLowerCase().trim() },
     });
@@ -79,55 +80,60 @@ const register = async (req, res) => {
     if (existing) {
       return res.status(409).json({
         success: false,
-        message: "An account with this email already exists.",
+        message: 'An account with this email already exists.',
       });
     }
 
+    // // Look up email in NIDA database
+    // const nidaProfile = await nidaPrisma.nidaProfile.findUnique({
+    //   where: { email: email.toLowerCase().trim() },
+    // });
+
     const hashedPassword = await bcrypt.hash(password, 12);
 
-    const newUser = await prisma.user.create({
-      data: {
-        firstName: firstName.trim(),
-        lastName: lastName.trim(),
-        email: email.toLowerCase().trim(),
-        password: hashedPassword,
-        role: "APPLICANT",
-      },
-    });
-
-await logAudit({
-  userId: newUser.id,
-  action: 'REGISTER',
-  entityType: 'USER',
-  entityId: newUser.id,
-  ipAddress: req.ip,
+   const newUser = await prisma.user.create({
+  data: {
+    firstName: firstName.trim(),
+    lastName: lastName.trim(),
+    email: email.toLowerCase().trim(),
+    password: hashedPassword,
+    role: 'APPLICANT',
+  },
 });
 
     const token = jwt.sign(
       { id: newUser.id, email: newUser.email, role: newUser.role },
       process.env.JWT_SECRET,
-      { expiresIn: process.env.JWT_EXPIRES_IN || "7d" },
+      { expiresIn: process.env.JWT_EXPIRES_IN || '7d' }
     );
+
+    await logAudit({
+      userId: newUser.id,
+      action: 'REGISTER',
+      entityType: 'USER',
+      entityId: newUser.id,
+      ipAddress: req.ip,
+    });
 
     return res.status(201).json({
       success: true,
-      message: "Account created successfully.",
+      message: 'Account created successfully.',
       data: {
-        token,
-        user: {
-          id: newUser.id,
-          firstName: newUser.firstName,
-          lastName: newUser.lastName,
-          email: newUser.email,
-          role: newUser.role,
-        },
-      },
+  token,
+  user: {
+    id: newUser.id,
+    firstName: newUser.firstName,
+    lastName: newUser.lastName,
+    email: newUser.email,
+    role: newUser.role,
+  },
+},
     });
   } catch (error) {
-    console.error("Register error:", error);
+    console.error('Register error:', error);
     return res.status(500).json({
       success: false,
-      message: "An error occurred during registration.",
+      message: 'An error occurred during registration.',
     });
   }
 };

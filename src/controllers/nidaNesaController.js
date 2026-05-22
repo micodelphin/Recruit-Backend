@@ -1,14 +1,16 @@
 const prisma = require('../config/db');
+const nidaPrisma = require('../config/nidaDb');
+const nesaPrisma = require('../config/nesaDb');
 
 /**
  * GET /api/nida/:nationalId
- * Fetch personal info from NIDA table
+ * Fetch personal info from NIDA database
  */
 const getNIDAProfile = async (req, res) => {
   try {
     const { nationalId } = req.params;
 
-    const profile = await prisma.nidaProfile.findUnique({
+    const profile = await nidaPrisma.nidaProfile.findUnique({
       where: { nationalId },
     });
 
@@ -16,6 +18,14 @@ const getNIDAProfile = async (req, res) => {
       return res.status(404).json({
         success: false,
         message: 'No NIDA profile found for this National ID.',
+      });
+    }
+
+    // Security check — verify the email matches the logged in user
+    if (profile.email !== req.user.email) {
+      return res.status(403).json({
+        success: false,
+        message: 'This National ID does not match your account.',
       });
     }
 
@@ -35,7 +45,7 @@ const getNIDAProfile = async (req, res) => {
 
 /**
  * GET /api/nesa/:studentId
- * Fetch academic info from NESA table
+ * Fetch academic records from NESA database
  * Requires both studentId and nationalId to match
  */
 const getNESARecord = async (req, res) => {
@@ -50,8 +60,7 @@ const getNESARecord = async (req, res) => {
       });
     }
 
-    // Find NESA record where both studentId and nationalId match
-    const record = await prisma.nesaRecord.findFirst({
+    const record = await nesaPrisma.nesaRecord.findFirst({
       where: {
         studentId,
         nationalId,
@@ -98,10 +107,10 @@ const createNIDAProfile = async (req, res) => {
       province,
       district,
       phone,
+      email,
     } = req.body;
 
-    // Check if nationalId already exists
-    const existing = await prisma.nidaProfile.findUnique({
+    const existing = await nidaPrisma.nidaProfile.findUnique({
       where: { nationalId },
     });
 
@@ -112,7 +121,7 @@ const createNIDAProfile = async (req, res) => {
       });
     }
 
-    const profile = await prisma.nidaProfile.create({
+    const profile = await nidaPrisma.nidaProfile.create({
       data: {
         nationalId,
         fullName,
@@ -125,7 +134,8 @@ const createNIDAProfile = async (req, res) => {
         address,
         province,
         district,
-        phone: phone || null, 
+        phone: phone || null,
+        email: email || null,
       },
     });
 
@@ -157,10 +167,11 @@ const createNESARecord = async (req, res) => {
       option,
       yearCompleted,
       grades,
+      result,
     } = req.body;
 
-    // Check if NIDA profile exists for this nationalId
-    const nidaProfile = await prisma.nidaProfile.findUnique({
+    // Check NIDA profile exists first
+    const nidaProfile = await nidaPrisma.nidaProfile.findUnique({
       where: { nationalId },
     });
 
@@ -171,8 +182,8 @@ const createNESARecord = async (req, res) => {
       });
     }
 
-    // Check if studentId already exists
-    const existingStudent = await prisma.nesaRecord.findUnique({
+    // Check studentId already exists
+    const existingStudent = await nesaPrisma.nesaRecord.findUnique({
       where: { studentId },
     });
 
@@ -183,8 +194,8 @@ const createNESARecord = async (req, res) => {
       });
     }
 
-    // Check if nationalId already has a NESA record
-    const existingNational = await prisma.nesaRecord.findUnique({
+    // Check nationalId already has a NESA record
+    const existingNational = await nesaPrisma.nesaRecord.findUnique({
       where: { nationalId },
     });
 
@@ -195,7 +206,7 @@ const createNESARecord = async (req, res) => {
       });
     }
 
-    const record = await prisma.nesaRecord.create({
+    const record = await nesaPrisma.nesaRecord.create({
       data: {
         studentId,
         nationalId,
@@ -204,6 +215,7 @@ const createNESARecord = async (req, res) => {
         option,
         yearCompleted: parseInt(yearCompleted),
         grades,
+        result: result || 'PASS',
       },
     });
 
