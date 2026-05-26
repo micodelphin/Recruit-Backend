@@ -1,27 +1,21 @@
-const prisma = require('../config/db');
-const nidaPrisma = require('../config/nidaDb');
-const nesaPrisma = require('../config/nesaDb');
+const axios = require('axios');
+
+const NIDA_SERVICE_URL = process.env.NIDA_SERVICE_URL || 'http://localhost:8001';
+const NESA_SERVICE_URL = process.env.NESA_SERVICE_URL || 'http://localhost:8002';
 
 /**
  * GET /api/nida/:nationalId
- * Fetch personal info from NIDA database
+ * Calls NIDA service to fetch profile
  */
 const getNIDAProfile = async (req, res) => {
   try {
     const { nationalId } = req.params;
 
-    const profile = await nidaPrisma.nidaProfile.findUnique({
-      where: { nationalId },
-    });
+    const response = await axios.get(`${NIDA_SERVICE_URL}/api/nida/${nationalId}`);
 
-    if (!profile) {
-      return res.status(404).json({
-        success: false,
-        message: 'No NIDA profile found for this National ID.',
-      });
-    }
+    const profile = response.data.data;
 
-    // Security check — verify the email matches the logged in user
+    // Security check — verify email matches logged in user
     if (profile.email !== req.user.email) {
       return res.status(403).json({
         success: false,
@@ -35,18 +29,23 @@ const getNIDAProfile = async (req, res) => {
       data: profile,
     });
   } catch (error) {
-    console.error('Get NIDA profile error:', error);
+    if (error.response?.status === 404) {
+      return res.status(404).json({
+        success: false,
+        message: 'No NIDA profile found for this National ID.',
+      });
+    }
+    console.error('NIDA service error:', error.message);
     return res.status(500).json({
       success: false,
-      message: 'Error fetching NIDA profile.',
+      message: 'Error connecting to NIDA service.',
     });
   }
 };
 
 /**
  * GET /api/nesa/:studentId
- * Fetch academic records from NESA database
- * Requires both studentId and nationalId to match
+ * Calls NESA service to fetch academic record
  */
 const getNESARecord = async (req, res) => {
   try {
@@ -60,175 +59,101 @@ const getNESARecord = async (req, res) => {
       });
     }
 
-    const record = await nesaPrisma.nesaRecord.findFirst({
-      where: {
-        studentId,
-        nationalId,
-      },
-    });
+    // Verify National ID belongs to logged in user via NIDA service
+    try {
+      const nidaResponse = await axios.get(`${NIDA_SERVICE_URL}/api/nida/${nationalId}`);
+      const nidaProfile = nidaResponse.data.data;
 
-    if (!record) {
+      if (nidaProfile.email !== req.user.email) {
+        return res.status(403).json({
+          success: false,
+          message: 'This National ID does not match your account.',
+        });
+      }
+    } catch (nidaError) {
+      return res.status(404).json({
+        success: false,
+        message: 'No NIDA profile found for this National ID.',
+      });
+    }
+
+    // Fetch NESA record
+    const response = await axios.get(
+      `${NESA_SERVICE_URL}/api/nesa/${studentId}?nationalId=${nationalId}`
+    );
+
+    return res.status(200).json({
+      success: true,
+      message: 'Academic record fetched successfully.',
+      data: response.data.data,
+    });
+  } catch (error) {
+    if (error.response?.status === 404) {
       return res.status(404).json({
         success: false,
         message: 'No academic record found. Please check your Student ID and National ID.',
       });
     }
-
-    return res.status(200).json({
-      success: true,
-      message: 'Academic record fetched successfully.',
-      data: record,
-    });
-  } catch (error) {
-    console.error('Get NESA record error:', error);
+    console.error('NESA service error:', error.message);
     return res.status(500).json({
       success: false,
-      message: 'Error fetching academic record.',
+      message: 'Error connecting to NESA service.',
     });
   }
 };
 
 /**
  * POST /api/nida
- * Add a new NIDA profile — Super Admin only
+ * Calls NIDA service to create a profile
  */
 const createNIDAProfile = async (req, res) => {
   try {
-    const {
-      nationalId,
-      fullName,
-      gender,
-      dob,
-      placeOfBirth,
-      nationality,
-      fatherName,
-      motherName,
-      address,
-      province,
-      district,
-      phone,
-      email,
-    } = req.body;
+    const response = await axios.post(`${NIDA_SERVICE_URL}/api/nida`, req.body);
 
-    const existing = await nidaPrisma.nidaProfile.findUnique({
-      where: { nationalId },
+    return res.status(201).json({
+      success: true,
+      message: 'NIDA profile created successfully.',
+      data: response.data.data,
     });
-
-    if (existing) {
+  } catch (error) {
+    if (error.response?.status === 409) {
       return res.status(409).json({
         success: false,
         message: 'A NIDA profile with this National ID already exists.',
       });
     }
-
-    const profile = await nidaPrisma.nidaProfile.create({
-      data: {
-        nationalId,
-        fullName,
-        gender,
-        dob: new Date(dob),
-        placeOfBirth,
-        nationality,
-        fatherName,
-        motherName,
-        address,
-        province,
-        district,
-        phone: phone || null,
-        email: email || null,
-      },
-    });
-
-    return res.status(201).json({
-      success: true,
-      message: 'NIDA profile created successfully.',
-      data: profile,
-    });
-  } catch (error) {
-    console.error('Create NIDA profile error:', error);
+    console.error('Create NIDA error:', error.message);
     return res.status(500).json({
       success: false,
-      message: 'Error creating NIDA profile.',
+      message: 'Error connecting to NIDA service.',
     });
   }
 };
 
 /**
  * POST /api/nesa
- * Add a new NESA record — Super Admin only
+ * Calls NESA service to create a record
  */
 const createNESARecord = async (req, res) => {
   try {
-    const {
-      studentId,
-      nationalId,
-      fullName,
-      school,
-      option,
-      yearCompleted,
-      grades,
-      result,
-    } = req.body;
-
-    // Check NIDA profile exists first
-    const nidaProfile = await nidaPrisma.nidaProfile.findUnique({
-      where: { nationalId },
-    });
-
-    if (!nidaProfile) {
-      return res.status(404).json({
-        success: false,
-        message: 'No NIDA profile found for this National ID. Create NIDA profile first.',
-      });
-    }
-
-    // Check studentId already exists
-    const existingStudent = await nesaPrisma.nesaRecord.findUnique({
-      where: { studentId },
-    });
-
-    if (existingStudent) {
-      return res.status(409).json({
-        success: false,
-        message: 'A NESA record with this Student ID already exists.',
-      });
-    }
-
-    // Check nationalId already has a NESA record
-    const existingNational = await nesaPrisma.nesaRecord.findUnique({
-      where: { nationalId },
-    });
-
-    if (existingNational) {
-      return res.status(409).json({
-        success: false,
-        message: 'A NESA record for this National ID already exists.',
-      });
-    }
-
-    const record = await nesaPrisma.nesaRecord.create({
-      data: {
-        studentId,
-        nationalId,
-        fullName,
-        school,
-        option,
-        yearCompleted: parseInt(yearCompleted),
-        grades,
-        result: result || 'PASS',
-      },
-    });
+    const response = await axios.post(`${NESA_SERVICE_URL}/api/nesa`, req.body);
 
     return res.status(201).json({
       success: true,
       message: 'NESA record created successfully.',
-      data: record,
+      data: response.data.data,
     });
   } catch (error) {
-    console.error('Create NESA record error:', error);
+    if (error.response?.status === 409) {
+      return res.status(409).json({
+        success: false,
+        message: error.response.data.message,
+      });
+    }
+    console.error('Create NESA error:', error.message);
     return res.status(500).json({
       success: false,
-      message: 'Error creating NESA record.',
+      message: 'Error connecting to NESA service.',
     });
   }
 };

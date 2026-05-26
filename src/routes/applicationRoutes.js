@@ -6,6 +6,7 @@ const {
   getAllApplications,
   getApplicationById,
   reviewApplication,
+  downloadCV,
 } = require('../controllers/applicationController');
 const { authenticate, authorize } = require('../middleware/auth');
 const upload = require('../middleware/upload');
@@ -28,7 +29,7 @@ router.get('/:id', authorize('HR', 'SUPER_ADMIN'), getApplicationById);
 // HR approves or rejects an application
 router.patch('/:id/review', authorize('HR', 'SUPER_ADMIN'), reviewApplication);
 
-// router.get('/:id/cv', authorize('HR', 'SUPER_ADMIN'), downloadCV);
+router.get('/:id/cv', authorize('HR', 'SUPER_ADMIN'), downloadCV);
 
 module.exports = router;
 

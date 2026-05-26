@@ -61,6 +61,7 @@ model Application {
   physicsGrade      String?  @map("physics_grade")
   chemistryGrade    String?  @map("chemistry_grade")
   biologyGrade      String?  @map("biology_grade")
+  nesaResult        String?  @map("nesa_result")
 
   cvFilename     String? @map("cv_filename")
   cvOriginalName String? @map("cv_original_name")

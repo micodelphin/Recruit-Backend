@@ -4,19 +4,20 @@
   "description": "",
   "main": "src/config/server.js",
   "scripts": {
-  "start": "node src/server.js",
-  "dev": "nodemon src/server.js",
-  "migrate:nida": "npx prisma migrate dev --schema=src/prisma/nida/schema.prisma",
-  "migrate:nesa": "npx prisma migrate dev --schema=src/prisma/nesa/schema.prisma",
-  "generate:nida": "npx prisma generate --schema=src/prisma/nida/schema.prisma",
-  "generate:nesa": "npx prisma generate --schema=src/prisma/nesa/schema.prisma",
-  "seed": "node src/config/seed.js"
-},
+    "start": "node src/server.js",
+    "dev": "nodemon src/server.js",
+    "migrate:nida": "npx prisma migrate dev --schema=src/prisma/nida/schema.prisma",
+    "migrate:nesa": "npx prisma migrate dev --schema=src/prisma/nesa/schema.prisma",
+    "generate:nida": "npx prisma generate --schema=src/prisma/nida/schema.prisma",
+    "generate:nesa": "npx prisma generate --schema=src/prisma/nesa/schema.prisma",
+    "seed": "node src/config/seed.js"
+  },
   "keywords": [],
   "author": "",
   "license": "ISC",
   "dependencies": {
     "@prisma/client": "^6.19.3",
+    "axios": "^1.16.1",
     "bcryptjs": "^3.0.3",
     "cors": "^2.8.6",
     "dotenv": "^17.4.2",

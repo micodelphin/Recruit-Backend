@@ -280,6 +280,7 @@ const reviewApplication = async (req, res) => {
       },
     });
 
+
 await logAudit({
   userId: req.user.id,
   action: `APPLICATION_${status}`,
@@ -308,10 +309,45 @@ await logAudit({
   }
 };
 
+  const downloadCV = async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    const application = await prisma.application.findUnique({
+      where: { id },
+    });
+
+    if (!application) {
+      return res.status(404).json({
+        success: false,
+        message: 'Application not found.',
+      });
+    }
+
+    if (!application.cvPath) {
+      return res.status(404).json({
+        success: false,
+        message: 'No CV found for this application.',
+      });
+    }
+
+    res.setHeader('Content-Type', application.cvMimeType || 'application/pdf');
+    res.setHeader('Content-Disposition', `inline; filename="${application.cvOriginalName}"`);
+    res.sendFile(require('path').resolve(application.cvPath));
+  } catch (error) {
+    console.error('Download CV error:', error);
+    return res.status(500).json({
+      success: false,
+      message: 'Error fetching CV.',
+    });
+  }
+};
+
 module.exports = {
   submitApplication,
   getMyApplication,
   getAllApplications,
   getApplicationById,
   reviewApplication,
+  downloadCV,
 };
