@@ -329,6 +329,48 @@ await logAudit({
   }
 };
 
+const resetUserPassword = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { newPassword } = req.body;
+
+    if (!newPassword || newPassword.length < 8) {
+      return res.status(400).json({ success: false, message: 'Password must be at least 8 characters.' });
+    }
+
+    const user = await prisma.user.findUnique({ where: { id } });
+
+    if (!user) {
+      return res.status(404).json({ success: false, message: 'User not found.' });
+    }
+
+    if (user.role === 'APPLICANT') {
+      return res.status(403).json({ success: false, message: 'Use the forgot password flow for applicants.' });
+    }
+
+    const hashedPassword = await bcrypt.hash(newPassword, 12);
+
+    await prisma.user.update({
+      where: { id },
+      data: { password: hashedPassword },
+    });
+
+    await logAudit({
+      userId: req.user.id,
+      action: 'RESET_USER_PASSWORD',
+      entityType: 'USER',
+      entityId: id,
+      ipAddress: req.ip,
+    });
+
+    return res.status(200).json({ success: true, message: 'Password reset successfully.' });
+
+  } catch (error) {
+    console.error('Reset user password error:', error);
+    return res.status(500).json({ success: false, message: 'Error resetting password.' });
+  }
+};
+
 module.exports = {
   getAllUsers,
   getUserById,
@@ -336,4 +378,5 @@ module.exports = {
   updateUser,
   toggleUserStatus,
   deleteUser,
+  resetUserPassword,
 };

@@ -6,7 +6,7 @@ const {
   createUser,
   updateUser,
   toggleUserStatus,
-  deleteUser,
+  resetUserPassword,
 } = require('../controllers/userController');
 const { authenticate, authorize } = require('../middleware/auth');
 
@@ -18,7 +18,8 @@ router.get('/:id', getUserById);
 router.post('/', createUser);
 router.patch('/:id', updateUser);
 router.patch('/:id/toggleUser', toggleUserStatus);
-router.delete('/:id', deleteUser);
+router.patch('/:id/resetPassword', authenticate, authorize('SUPER_ADMIN'), resetUserPassword);
+
 
 module.exports = router;
 
@@ -148,10 +149,11 @@ router.patch('/:id/toggle-status', toggleUserStatus);
 
 /**
  * @swagger
- * /api/users/{id}:
- *   delete:
- *     summary: Delete a user
- *     tags: [Users]
+ * /api/users/{id}/reset-password:
+ *   patch:
+ *     summary: Reset user password
+ *     tags:
+ *       - Users
  *     security:
  *       - bearerAuth: []
  *     parameters:
@@ -160,8 +162,30 @@ router.patch('/:id/toggle-status', toggleUserStatus);
  *         required: true
  *         schema:
  *           type: string
+ *         description: User ID
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - newPassword
+ *             properties:
+ *               newPassword:
+ *                 type: string
+ *                 example: Password123
  *     responses:
  *       200:
- *         description: User deleted successfully
+ *         description: Password reset successfully
+ *       400:
+ *         description: Invalid password
+ *       403:
+ *         description: Forbidden
+ *       404:
+ *         description: User not found
+ *       500:
+ *         description: Server error
  */
-router.delete('/:id', deleteUser);
+router.patch('/:id/reset-password', authenticate, authorize('SUPER_ADMIN'), resetUserPassword);
+

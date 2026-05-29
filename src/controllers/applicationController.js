@@ -75,13 +75,13 @@ const submitApplication = async (req, res) => {
     });
 
     // After application is created
-await logAudit({
-  userId: req.user.id,
-  action: 'APPLICATION_SUBMITTED',
-  entityType: 'APPLICATION',
-  entityId: application.id,
-  ipAddress: req.ip,
-});
+    await logAudit({
+      userId: req.user.id,
+      action: 'APPLICATION_SUBMITTED',
+      entityType: 'APPLICATION',
+      entityId: application.id,
+      ipAddress: req.ip,
+    });
 
     return res.status(201).json({
       success: true,
@@ -149,7 +149,6 @@ const getMyApplication = async (req, res) => {
 const getAllApplications = async (req, res) => {
   try {
     const applications = await prisma.application.findMany({
-      take: 10,
       orderBy: [
         { lastName: 'asc' },
         { firstName: 'asc' },
@@ -175,9 +174,8 @@ const getAllApplications = async (req, res) => {
       success: true,
       data: applications,
       meta: {
-        showing: applications.length,
-        total,
-        note: 'Showing latest 10 applications sorted alphabetically',
+        total: applications.length,
+        note: 'All applications sorted alphabetically',
       },
     });
   } catch (error) {
@@ -281,14 +279,14 @@ const reviewApplication = async (req, res) => {
     });
 
 
-await logAudit({
-  userId: req.user.id,
-  action: `APPLICATION_${status}`,
-  entityType: 'APPLICATION',
-  entityId: id,
-  details: { status, reviewComment },
-  ipAddress: req.ip,
-});
+    await logAudit({
+      userId: req.user.id,
+      action: `APPLICATION_${status}`,
+      entityType: 'APPLICATION',
+      entityId: id,
+      details: { status, reviewComment },
+      ipAddress: req.ip,
+    });
 
     return res.status(200).json({
       success: true,
@@ -309,7 +307,7 @@ await logAudit({
   }
 };
 
-  const downloadCV = async (req, res) => {
+const downloadCV = async (req, res) => {
   try {
     const { id } = req.params;
 
