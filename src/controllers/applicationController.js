@@ -43,6 +43,7 @@ const submitApplication = async (req, res) => {
       physicsGrade,
       chemistryGrade,
       biologyGrade,
+      nesaResult,
     } = req.body;
     const cvFile = req.file;
 
@@ -66,6 +67,7 @@ const submitApplication = async (req, res) => {
         physicsGrade,
         chemistryGrade,
         biologyGrade,
+        nesaResult,
         cvFilename: cvFile?.filename || null,
         cvOriginalName: cvFile?.originalname || null,
         cvPath: cvFile?.path || null,

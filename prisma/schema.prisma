@@ -7,6 +7,75 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+model User {
+  id           String        @id @default(uuid())
+  firstName    String        @map("first_name")
+  lastName     String        @map("last_name")
+  email        String        @unique
+  password     String
+  role         UserRole      @default(APPLICANT)
+  isActive     Boolean       @default(true) @map("is_active")
+  createdAt    DateTime      @default(now()) @map("created_at")
+  updatedAt    DateTime      @updatedAt @map("updated_at")
+  reviews      Application[] @relation("ReviewedBy")
+  applications Application[] @relation("UserApplications")
+  auditLogs    AuditLog[]
+
+  @@map("users")
+}
+
+model Application {
+  id               String            @id @default(uuid())
+  userId           String            @map("user_id")
+  nationalId       String            @unique @map("national_id")
+  firstName        String            @map("first_name")
+  lastName         String            @map("last_name")
+  dateOfBirth      DateTime          @map("date_of_birth")
+  gender           String
+  phone            String
+  address          String
+  province         String?
+  district         String?
+  schoolName       String?           @map("school_name")
+  combination      String?
+  yearOfCompletion Int?              @map("year_of_completion")
+  mathematicsGrade String?           @map("mathematics_grade")
+  englishGrade     String?           @map("english_grade")
+  physicsGrade     String?           @map("physics_grade")
+  chemistryGrade   String?           @map("chemistry_grade")
+  biologyGrade     String?           @map("biology_grade")
+  nesaResult       String?           @map("nesa_result")
+  cvFilename       String?           @map("cv_filename")
+  cvOriginalName   String?           @map("cv_original_name")
+  cvPath           String?           @map("cv_path")
+  cvSize           Int?              @map("cv_size")
+  cvMimeType       String?           @map("cv_mime_type")
+  status           ApplicationStatus @default(PENDING)
+  reviewComment    String?           @map("review_comment")
+  reviewedBy       String?           @map("reviewed_by")
+  reviewedAt       DateTime?         @map("reviewed_at")
+  createdAt        DateTime          @default(now()) @map("created_at")
+  updatedAt        DateTime          @updatedAt @map("updated_at")
+  reviewer         User?             @relation("ReviewedBy", fields: [reviewedBy], references: [id])
+  user             User              @relation("UserApplications", fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("applications")
+}
+
+model AuditLog {
+  id         String   @id @default(uuid())
+  userId     String?  @map("user_id")
+  action     String
+  entityType String?  @map("entity_type")
+  entityId   String?  @map("entity_id")
+  details    Json?
+  ipAddress  String?  @map("ip_address")
+  createdAt  DateTime @default(now()) @map("created_at")
+  user       User?    @relation(fields: [userId], references: [id])
+
+  @@map("audit_logs")
+}
+
 enum UserRole {
   APPLICANT
   HR
@@ -18,82 +87,4 @@ enum ApplicationStatus {
   UNDER_REVIEW
   APPROVED
   REJECTED
-}
-
-model User {
-  id         String    @id @default(uuid())
-  firstName  String    @map("first_name")
-  lastName   String    @map("last_name")
-  email      String    @unique
-  password   String
-  nationalId   String?      @unique @map("national_id")
-  role       UserRole  @default(APPLICANT)
-  isActive   Boolean   @default(true) @map("is_active")
-  createdAt  DateTime  @default(now()) @map("created_at")
-  updatedAt  DateTime  @updatedAt @map("updated_at")
-
-  applications  Application[] @relation("UserApplications")
-  reviews       Application[] @relation("ReviewedBy")
-  auditLogs     AuditLog[]
-
-  @@map("users")
-}
-
-model Application {
-  id          String            @id @default(uuid())
-  userId      String            @map("user_id")
-  nationalId  String            @unique @map("national_id")
-
-  firstName       String   @map("first_name")
-  lastName        String   @map("last_name")
-  dateOfBirth     DateTime @map("date_of_birth")
-  gender          String
-  phone           String
-  address         String
-  province        String?
-  district        String?
-
-  schoolName        String?  @map("school_name")
-  combination       String?
-  yearOfCompletion  Int?     @map("year_of_completion")
-  mathematicsGrade  String?  @map("mathematics_grade")
-  englishGrade      String?  @map("english_grade")
-  physicsGrade      String?  @map("physics_grade")
-  chemistryGrade    String?  @map("chemistry_grade")
-  biologyGrade      String?  @map("biology_grade")
-  nesaResult        String?  @map("nesa_result")
-
-  cvFilename     String? @map("cv_filename")
-  cvOriginalName String? @map("cv_original_name")
-  cvPath         String? @map("cv_path")
-  cvSize         Int?    @map("cv_size")
-  cvMimeType     String? @map("cv_mime_type")
-
-  status         ApplicationStatus @default(PENDING)
-  reviewComment  String?           @map("review_comment")
-  reviewedBy     String?           @map("reviewed_by")
-  reviewedAt     DateTime?         @map("reviewed_at")
-
-  createdAt  DateTime @default(now()) @map("created_at")
-  updatedAt  DateTime @updatedAt @map("updated_at")
-
-  user      User  @relation("UserApplications", fields: [userId], references: [id], onDelete: Cascade)
-  reviewer  User? @relation("ReviewedBy", fields: [reviewedBy], references: [id])
-
-  @@map("applications")
-}
-
-model AuditLog {
-  id          String   @id @default(uuid())
-  userId      String?  @map("user_id")
-  action      String
-  entityType  String?  @map("entity_type")
-  entityId    String?  @map("entity_id")
-  details     Json?
-  ipAddress   String?  @map("ip_address")
-  createdAt   DateTime @default(now()) @map("created_at")
-
-  user  User? @relation(fields: [userId], references: [id])
-
-  @@map("audit_logs")
 }
