@@ -17,7 +17,7 @@ const getDashboardStats = async (req, res) => {
       const recentApplications = await prisma.application.findMany({
         take: 5,
         orderBy: { createdAt: 'desc' },
-        select: { id: true, firstName: true, lastName: true, status: true, createdAt: true },
+        select: { id: true, firstName: true, lastName: true, status: true, createdAt: true, photoUrl: true,},
       });
 
       return res.status(200).json({

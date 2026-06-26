@@ -7,6 +7,7 @@ const {
   getApplicationById,
   reviewApplication,
   downloadCV,
+  updateApplicationPhoto,
 } = require('../controllers/applicationController');
 const { authenticate, authorize } = require('../middleware/auth');
 const upload = require('../middleware/upload');
@@ -30,6 +31,9 @@ router.get('/:id', authorize('HR', 'SUPER_ADMIN'), getApplicationById);
 router.patch('/:id/review', authorize('HR', 'SUPER_ADMIN'), reviewApplication);
 
 router.get('/:id/cv', authorize('HR', 'SUPER_ADMIN'), downloadCV);
+
+// adding photo to application
+router.patch('/addPhoto/:nationalId', authorize('SUPER_ADMIN'), updateApplicationPhoto);
 
 module.exports = router;
 

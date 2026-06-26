@@ -1,5 +1,6 @@
 const prisma = require('../config/db');
 const { logAudit } = require('../utils/auditLogger');
+const axios = require('axios');
 
 
 
@@ -168,6 +169,7 @@ const getAllApplications = async (req, res) => {
         combination: true,
         status: true,
         createdAt: true,
+        photoUrl: true,
       },
     });
 
@@ -345,6 +347,42 @@ const downloadCV = async (req, res) => {
   }
 };
 
+const updateApplicationPhoto = async (req, res) => {
+  try {
+    const { nationalId } = req.params;
+
+    const application = await prisma.application.findFirst({
+      where: { nationalId },
+      select: { id: true, nationalId: true },
+    });
+
+    if (!application) {
+      return res.status(404).json({ success: false, message: 'No application found for this National ID.' });
+    }
+
+    const response = await axios.get(`${process.env.NIDA_SERVICE_URL}/api/nida/${nationalId}`);
+    const photoUrl = response.data?.data?.photoUrl;
+
+    if (!photoUrl) {
+      return res.status(404).json({ success: false, message: 'No photo found for this National ID in NIDA.' });
+    }
+
+    await prisma.application.update({
+      where: { id: application.id },
+      data: { photoUrl },
+    });
+
+    return res.status(200).json({
+      success: true,
+      message: 'Photo updated successfully.',
+      data: { photoUrl },
+    });
+  } catch (error) {
+    console.error('Update application photo error:', error);
+    return res.status(500).json({ success: false, message: 'Error updating photo.' });
+  }
+};
+
 module.exports = {
   submitApplication,
   getMyApplication,
@@ -352,4 +390,5 @@ module.exports = {
   getApplicationById,
   reviewApplication,
   downloadCV,
+  updateApplicationPhoto,
 };
